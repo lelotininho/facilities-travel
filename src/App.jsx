@@ -123,17 +123,16 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
 // ─── Claude API ───────────────────────────────────────────────────────────────
 async function askClaude(prompt) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: JSON.stringify({ prompt }),
   });
   const data = await res.json();
-  return data.content?.map(b => b.text || "").join("") || "";
+  if (!res.ok) {
+    throw new Error(data.error || "Erro ao gerar resposta da IA");
+  }
+  return data.text || "";
 }
 
 // ─── Accessibility Panel ──────────────────────────────────────────────────────
