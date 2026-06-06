@@ -1,0 +1,11 @@
+
+NOTA: Adicione os arquivos de ícone antes de publicar:
+- public/favicon.ico       (64x64)
+- public/icon-192.png      (192x192)  
+- public/icon-512.png      (512x512)
+- public/apple-touch-icon.png (180x180)
+
+Ferramenta gratuita para gerar todos de uma imagem:
+https://favicon.io/favicon-generator/
+ou
+https://realfavicongenerator.net/
