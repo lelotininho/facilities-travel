@@ -7,14 +7,22 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "check:format": "prettier --check .",
+    "test:regression": "npx playwright test",
+    "test:metrics": "node scripts/collect-metrics.js",
+    "qa": "node scripts/qa-agent.js run",
+    "qa:report": "node scripts/qa-agent.js report"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "prettier": "^3.0.0",
     "vite": "^5.4.1",
     "vite-plugin-pwa": "^0.20.5",
     "workbox-window": "^7.1.0"

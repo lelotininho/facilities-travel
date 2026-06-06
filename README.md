@@ -7,6 +7,7 @@ App de viagens com IA — busca de voos, hotéis e pacotes, acessível para todo
 ## 🚀 Deploy rápido (30 minutos)
 
 ### Pré-requisitos
+
 - Conta no GitHub ✅ (você já tem)
 - Conta na Vercel (gratuita) — [vercel.com/signup](https://vercel.com/signup)
 - Chave da API Anthropic — [console.anthropic.com](https://console.anthropic.com)
@@ -43,8 +44,8 @@ git push -u origin main
 4. Framework: **Vite**
 5. **Antes de clicar em Deploy**, vá em **"Environment Variables"** e adicione:
 
-| Nome | Valor |
-|------|-------|
+| Nome                     | Valor                   |
+| ------------------------ | ----------------------- |
 | `VITE_ANTHROPIC_API_KEY` | `sk-ant-SUA_CHAVE_AQUI` |
 
 6. Clique em **"Deploy"**
@@ -62,12 +63,14 @@ Compartilhe este link — qualquer pessoa acessa pelo celular.
 ## 📲 Instalar como PWA (app no celular)
 
 **Android (Chrome):**
+
 1. Abra o link no Chrome
 2. Toque nos 3 pontos (menu)
 3. "Adicionar à tela inicial"
 4. Pronto — ícone na tela inicial ✅
 
 **iPhone (Safari):**
+
 1. Abra o link no Safari
 2. Toque no ícone de compartilhar (quadrado com seta)
 3. "Adicionar à Tela de Início"
@@ -122,8 +125,28 @@ npm run build
 npx serve dist
 ```
 
-Observação: o repositório será tornado público para facilitar o download das releases.
+### Rodar o agente de QA localmente
 
+```bash
+npm run qa
+```
+
+O projeto agora inclui um agente de QA automático que:
+
+- executa testes de regressão com Playwright
+- coleta métricas de desempenho do app
+- gera relatórios em `qa/bug-report.md`
+- aplica correções de formatação automáticas com Prettier
+
+A pipeline de QA está configurada em `.github/workflows/qa.yml` e roda em pushes para `main` e em pull requests.
+
+Para gerar apenas o relatório sem reiniciar os testes:
+
+```bash
+npm run qa:report
+```
+
+Observação: o repositório será tornado público para facilitar o download das releases.
 
 ## 🔐 Segurança
 
