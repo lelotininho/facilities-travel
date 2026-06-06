@@ -123,16 +123,17 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
 // ─── Claude API ───────────────────────────────────────────────────────────────
 async function askClaude(prompt) {
-  const res = await fetch("/api/claude", {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }],
+    }),
   });
   const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Erro ao gerar resposta da IA");
-  }
-  return data.text || "";
+  return data.content?.map(b => b.text || "").join("") || "";
 }
 
 // ─── Accessibility Panel ──────────────────────────────────────────────────────
@@ -217,7 +218,7 @@ function A11yPanel({ onClose }) {
           <div style={{ fontSize: 10 * fontSize, color: fs.muted }}>Narração em português brasileiro</div>
         </div>
         <button role="switch" aria-checked={screenReader} aria-label="Ativar leitor de tela"
-          onClick={() => { setScreenReader(v => !v); setTimeout(() => speak("Leitor de tela ativado. Bem-vindo ao Facilities Travel."), 300); }}
+          onClick={() => { setScreenReader(v => !v); setTimeout(() => speak("Leitor de tela ativado. Bem-vindo ao Wander."), 300); }}
           style={toggle(screenReader)}><div style={thumb(screenReader)} /></button>
       </div>
 
@@ -263,39 +264,52 @@ function A11yPanel({ onClose }) {
 
 // ─── Social provider config ───────────────────────────────────────────────────
 const SOCIAL_PROVIDERS = [
-  { id: "google",   label: "Continuar com Google",   bg: "#fff",     color: "#1F1F1F", border: "rgba(0,0,0,0.12)", logo: (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/>
-      <path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2c-7.7 0-14.4 4.4-17.7 10.7z" transform="translate(0,2)"/>
-      <path fill="#FBBC05" d="M24 46c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.7 37.3 27 38 24 38c-6 0-11.1-4-12.9-9.5l-7 5.4C7.7 41.6 15.3 46 24 46z" transform="translate(0,-1)"/>
-      <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.9 2.6-2.6 4.8-4.9 6.3l6.6 5.4C41.6 36.8 44.5 31 44.5 24c0-1.3-.2-2.7-.5-4z" transform="translate(0,-4)"/>
-    </svg>
-  )},
-  { id: "facebook", label: "Continuar com Facebook", bg: "#1877F2", color: "#fff",    border: "transparent",      logo: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-    </svg>
-  )},
-  { id: "microsoft", label: "Continuar com Outlook",  bg: "#0078D4", color: "#fff",   border: "transparent",      logo: (
-    <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true">
-      <rect x="1" y="1" width="10" height="10" fill="#F35325"/>
-      <rect x="12" y="1" width="10" height="10" fill="#81BC06"/>
-      <rect x="1" y="12" width="10" height="10" fill="#05A6F0"/>
-      <rect x="12" y="12" width="10" height="10" fill="#FFBA08"/>
-    </svg>
-  )},
-  { id: "apple",    label: "Continuar com Apple",    bg: "#000",     color: "#fff",    border: "rgba(255,255,255,0.15)", logo: (
-    <svg width="17" height="18" viewBox="0 0 814 1000" fill="white" aria-hidden="true">
-      <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105.5-57.8-155.5-127.4C46 391.3 0 276.2 0 166.3C0 74.5 64.2 24 124.1 24c61.1 0 105.9 40.5 147.5 40.5 37.4 0 88.3-44 158.3-44 27.2 0 96.6 3.9 149.3 61.6z"/>
-      <path d="M549.3 32.7c2.5-15.9 4-31.9 4-48.6 0-45.5-16.2-97.8-45-133.5-29.2-37.1-80.6-64.4-122.6-64.4-1 0-2 .1-3 .2 2.5 17.1 4 34.2 4 50.2 0 45.2-14.4 95.5-42.5 131.1-27.2 34.2-77.3 61.5-120.6 61.5-.8 0-1.6-.1-2.5-.1 2.5 17.3 8.9 35.1 18.4 50.6 20.3 33.1 57.9 57.8 98.5 57.8 34.2 0 72.2-21.5 99.3-21.5 28.3 0 70.6 21.5 112.5 21.5z"/>
-    </svg>
-  )},
+  {
+    id: "google", label: "Continuar com Google",
+    bg: "#fff", color: "#1F1F1F", border: "rgba(0,0,0,0.15)",
+    logo: (
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/>
+        <path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2c-7.7 0-14.4 4.4-17.7 10.7z" transform="translate(0,2)"/>
+        <path fill="#FBBC05" d="M24 46c5.5 0 10.5-1.9 14.3-5l-6.6-5.4C29.7 37.3 27 38 24 38c-6 0-11.1-4-12.9-9.5l-7 5.4C7.7 41.6 15.3 46 24 46z" transform="translate(0,-1)"/>
+        <path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.9 2.6-2.6 4.8-4.9 6.3l6.6 5.4C41.6 36.8 44.5 31 44.5 24c0-1.3-.2-2.7-.5-4z" transform="translate(0,-4)"/>
+      </svg>
+    )
+  },
+  {
+    id: "facebook", label: "Continuar com Facebook",
+    bg: "#1877F2", color: "#fff", border: "transparent",
+    logo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+      </svg>
+    )
+  },
+  {
+    id: "microsoft", label: "Continuar com Outlook / Microsoft",
+    bg: "#0078D4", color: "#fff", border: "transparent",
+    logo: (
+      <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true">
+        <rect x="1" y="1" width="10" height="10" fill="#F35325"/><rect x="12" y="1" width="10" height="10" fill="#81BC06"/>
+        <rect x="1" y="12" width="10" height="10" fill="#05A6F0"/><rect x="12" y="12" width="10" height="10" fill="#FFBA08"/>
+      </svg>
+    )
+  },
+  {
+    id: "apple", label: "Continuar com Apple",
+    bg: "#000", color: "#fff", border: "rgba(255,255,255,0.18)",
+    logo: (
+      <svg width="17" height="18" viewBox="0 0 814 1000" fill="white" aria-hidden="true">
+        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105.5-57.8-155.5-127.4C46 391.3 0 276.2 0 166.3 0 74.5 64.2 24 124.1 24c61.1 0 105.9 40.5 147.5 40.5 37.4 0 88.3-44 158.3-44 27.2 0 96.6 3.9 149.3 61.6z"/>
+      </svg>
+    )
+  },
 ];
 
-// ─── SCREEN: Login / Cadastro ─────────────────────────────────────────────────
-function LoginScreen({ onNext }) {
+// ─── SCREEN: Login / Cadastro (simplificado, sem 2FA/PIN) ─────────────────────
+function LoginScreen({ onEnter, isRelock }) {
   const { colors: C, fontSize, largeTargets, speak, highContrast } = useA11y();
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [name, setName] = useState("");
@@ -308,367 +322,229 @@ function LoginScreen({ onNext }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState(null);
-  const [bioLoading, setBioLoading] = useState(false);
+  const [foci, setFoci] = useState({});
   const btnH = largeTargets ? 54 : 48;
 
-  const inputRow = (focused) => ({
-    display: "flex", alignItems: "center", gap: 11,
-    background: highContrast ? "#1A1A1A" : "rgba(255,255,255,0.04)",
-    borderRadius: 14, padding: `${largeTargets ? 14 : 12}px 15px`,
-    border: `1.5px solid ${focused ? C.teal + "90" : C.border}`, transition: "all 0.22s",
-  });
-
-  const [foci, setFoci] = useState({});
   const focus = (k) => setFoci(p => ({ ...p, [k]: true }));
   const blur  = (k) => setFoci(p => ({ ...p, [k]: false }));
+  const ir = (focused) => ({
+    display: "flex", alignItems: "center", gap: 11,
+    background: highContrast ? "#1A1A1A" : "rgba(255,255,255,0.05)",
+    borderRadius: 14, padding: `${largeTargets ? 14 : 12}px 15px`,
+    border: `1.5px solid ${focused ? C.teal + "90" : C.border}`,
+    transition: "border-color 0.2s", marginBottom: 10,
+  });
 
-  const handleLogin = () => {
+  const handleLogin = (e) => {
+    e?.preventDefault();
     setError(""); setSuccess("");
-    if (!email || !pass) { const m = "Preencha e-mail e senha."; setError(m); speak(m); return; }
+    if (!email || !pass) { setError("Please fill in email and password."); return; }
     setLoading(true);
-    speak("Verificando credenciais, aguarde.");
     setTimeout(() => {
-      if (email === DEMO_USER.email && pass === "123456") {
-        speak("Login realizado. Enviando código de verificação.");
-        onNext("2fa");
+      // Aceita qualquer e-mail + senha ≥ 6 caracteres (demo)
+      if (pass.length >= 6) {
+        speak("Login realizado com sucesso!");
+        onEnter();
       } else {
-        const m = "Credenciais inválidas. Demo: voce@email.com / 123456";
-        setError(m); speak(m); setLoading(false);
+        setError("Password must be at least 6 characters.");
+        setLoading(false);
       }
-    }, 1200);
+    }, 900);
   };
 
-  const handleSignup = () => {
+  const handleSignup = (e) => {
+    e?.preventDefault();
     setError(""); setSuccess("");
-    if (!name || !email || !phone || !pass || !confirmPass) { const m = "Preencha todos os campos."; setError(m); speak(m); return; }
-    if (pass !== confirmPass) { const m = "As senhas não coincidem."; setError(m); speak(m); return; }
-    if (pass.length < 6) { const m = "A senha deve ter pelo menos 6 caracteres."; setError(m); speak(m); return; }
-    if (!acceptTerms) { const m = "Aceite os termos para continuar."; setError(m); speak(m); return; }
+    if (!name || !email || !pass || !confirmPass) { setError("Please fill in all required fields."); return; }
+    if (pass !== confirmPass) { setError("Passwords do not match."); return; }
+    if (pass.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (!acceptTerms) { setError("Please accept the terms to continue."); return; }
     setLoading(true);
-    speak("Criando sua conta, aguarde.");
+    speak("Criando sua conta…");
     setTimeout(() => {
-      setSuccess("Conta criada com sucesso! Fazendo login…");
-      speak("Conta criada com sucesso. Enviando código de verificação.");
-      setTimeout(() => onNext("2fa"), 1200);
-    }, 1400);
+      setSuccess("Account created! Signing in…");
+      setTimeout(() => onEnter(), 800);
+    }, 1000);
   };
 
   const handleSocial = (provider) => {
     setSocialLoading(provider.id);
-    speak(`Conectando com ${provider.label}`);
+    speak(`Conectando com ${provider.label}…`);
+    // Simula OAuth — em produção integrar Supabase Auth
     setTimeout(() => {
       setSocialLoading(null);
-      speak(`Conectado com ${provider.label}. Bem-vindo ao Facilities Travel.`);
-      onNext("app");
-    }, 1800);
+      speak(`Bem-vindo ao Wander!`);
+      onEnter();
+    }, 1200);
   };
-
-  const handleBiometric = async () => {
-    setBioLoading(true);
-    speak("Iniciando verificação biométrica.");
-    try {
-      await new Promise(r => setTimeout(r, 1600));
-      speak("Biometria verificada. Bem-vindo ao Facilities Travel.");
-      onNext("app");
-    } catch { setError("Biometria não disponível."); }
-    finally { setBioLoading(false); }
-  };
-
-  const divider = (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}>
-      <div style={{ flex: 1, height: 1, background: C.border }} />
-      <span style={{ fontSize: `${0.65 * fontSize}rem`, color: C.muted }}>ou continue com</span>
-      <div style={{ flex: 1, height: 1, background: C.border }} />
-    </div>
-  );
 
   return (
-    <main role="main" aria-label={mode === "login" ? "Tela de login" : "Tela de cadastro"}
-      style={{ ...authContainer(C), fontSize: `${fontSize}rem`, overflowY: "auto", paddingBottom: 50 }}>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: `radial-gradient(ellipse 90% 55% at 50% -5%, ${C.teal}1A 0%, transparent 65%)`, pointerEvents: "none" }} />
+    <main role="main" aria-label={isRelock ? "Sessão expirada — faça login novamente" : mode === "login" ? "Sign in" : "Sign up"}
+      style={{ fontFamily: "'Syne','DM Sans',system-ui,sans-serif", background: C.bg, minHeight: "100vh", color: C.fg, maxWidth: 430, margin: "0 auto", padding: "56px 24px 40px", position: "relative", overflowY: "auto" }}>
+
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 260, background: `radial-gradient(ellipse 90% 60% at 50% 0%, ${C.teal}18 0%, transparent 70%)`, pointerEvents: "none" }} aria-hidden="true" />
 
       {/* Logo */}
-      <div style={{ textAlign: "center", marginBottom: 24, position: "relative" }}>
-        <div style={logoBox(C)} aria-hidden="true"><span style={{ fontSize: 24 }}>🛡️</span></div>
-        <h1 style={{ fontSize: `${1.7 * fontSize}rem`, fontWeight: 800, letterSpacing: -0.5, marginBottom: 4 }}>
-          Facilities<span style={{ color: C.teal }}>Travel</span>
+      <div style={{ textAlign: "center", marginBottom: 22, position: "relative" }}>
+        <div style={{ width: 58, height: 58, borderRadius: 20, background: `${C.teal}20`, border: `2px solid ${C.teal}50`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: 26 }}>🧭</div>
+        <h1 style={{ fontSize: `${1.75 * fontSize}rem`, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1, marginBottom: 4 }}>
+          Wander<span style={{ color: C.teal }}>.</span>
         </h1>
-        <p style={{ fontSize: `${0.72 * fontSize}rem`, color: C.muted }}>Viagens acessíveis e seguras para todos</p>
+        <p style={{ fontSize: `${0.72 * fontSize}rem`, color: C.muted }}>
+          {isRelock ? "Session expired. Please sign in again." : "Explore the world, your way."}
+        </p>
       </div>
 
-      {/* Mode toggle */}
-      <div role="tablist" aria-label="Selecione login ou cadastro"
-        style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: 4, marginBottom: 20 }}>
-        {[{ id: "login", label: "Entrar" }, { id: "signup", label: "Criar conta" }].map(m => (
-          <button key={m.id} role="tab" aria-selected={mode === m.id}
-            onClick={() => { setMode(m.id); setError(""); setSuccess(""); speak(`Aba ${m.label}`); }}
-            style={{ flex: 1, padding: `${largeTargets ? 12 : 9}px`, borderRadius: 11, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: `${0.82 * fontSize}rem`, transition: "all 0.2s", background: mode === m.id ? C.teal : "transparent", color: mode === m.id ? "#070A12" : C.muted }}>
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Security badge */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, background: `${C.teal}0E`, border: `1px solid ${C.teal}28`, borderRadius: 11, padding: "6px 12px", marginBottom: 18, justifyContent: "center" }} role="note">
-        <span aria-hidden="true">🔒</span>
-        <span style={{ fontSize: `${0.6 * fontSize}rem`, fontWeight: 700, color: C.teal }}>SSL 256-bit · WCAG 2.1 AA · Dados protegidos</span>
-      </div>
-
-      {/* ── LOGIN FORM ── */}
-      {mode === "login" && (
-        <div style={{ position: "relative" }}>
-          <label htmlFor="li-email" style={{ position: "absolute", left: -9999 }}>E-mail</label>
-          <div style={{ ...inputRow(foci.email), marginBottom: 10 }}>
-            <span aria-hidden="true">📧</span>
-            <input id="li-email" style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1 }} type="email" placeholder="Seu e-mail" value={email} autoComplete="email" onChange={e => setEmail(e.target.value)} onFocus={() => focus("email")} onBlur={() => blur("email")} aria-required="true" />
-          </div>
-
-          <label htmlFor="li-pass" style={{ position: "absolute", left: -9999 }}>Senha</label>
-          <div style={{ ...inputRow(foci.pass), marginBottom: 14 }}>
-            <span aria-hidden="true">🔑</span>
-            <input id="li-pass" style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1 }} type={showPass ? "text" : "password"} placeholder="Senha" value={pass} autoComplete="current-password" onChange={e => setPass(e.target.value)} onFocus={() => focus("pass")} onBlur={() => blur("pass")} onKeyDown={e => e.key === "Enter" && handleLogin()} aria-required="true" />
-            <button onClick={() => { setShowPass(v => !v); speak(showPass ? "Senha ocultada" : "Senha visível"); }} aria-label={showPass ? "Ocultar senha" : "Mostrar senha"} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 15, color: C.muted }}>{showPass ? "🙈" : "👁️"}</button>
-          </div>
-
-          {error && <div role="alert" aria-live="assertive" style={{ background: `${C.danger}18`, border: `1px solid ${C.danger}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.danger, marginBottom: 12, lineHeight: 1.5 }}>{error}</div>}
-
-          <button onClick={handleLogin} disabled={loading} aria-busy={loading}
-            style={{ width: "100%", height: btnH, borderRadius: 15, border: "none", background: `linear-gradient(135deg, ${C.teal}, #0EB886)`, color: "#070A12", fontSize: `${0.85 * fontSize}rem`, fontWeight: 800, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 6, opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
-            {loading && <span style={{ width: 14, height: 14, border: "2px solid rgba(0,0,0,0.25)", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} aria-hidden="true" />}
-            {loading ? "Verificando…" : "Entrar com segurança"}
-          </button>
-
-          <button onClick={() => { speak("Redefinição de senha — funcionalidade em breve"); setSuccess("Link de redefinição enviado para seu e-mail."); }} style={{ background: "none", border: "none", cursor: "pointer", color: C.teal, fontSize: `${0.7 * fontSize}rem`, fontWeight: 600, display: "block", margin: "0 auto 14px", fontFamily: "inherit" }}>
-            Esqueci minha senha
-          </button>
-        </div>
-      )}
-
-      {/* ── SIGNUP FORM ── */}
-      {mode === "signup" && (
-        <div style={{ position: "relative" }}>
-          {[
-            { id: "sg-name",  icon: "👤", placeholder: "Nome completo",     type: "text",     val: name,        set: setName,        key: "name",    autoComplete: "name" },
-            { id: "sg-email", icon: "📧", placeholder: "E-mail",             type: "email",    val: email,       set: setEmail,       key: "email2",  autoComplete: "email" },
-            { id: "sg-phone", icon: "📱", placeholder: "Telefone (WhatsApp)",type: "tel",      val: phone,       set: setPhone,       key: "phone",   autoComplete: "tel" },
-          ].map(f => (
-            <div key={f.id} style={{ marginBottom: 10 }}>
-              <label htmlFor={f.id} style={{ position: "absolute", left: -9999 }}>{f.placeholder}</label>
-              <div style={inputRow(foci[f.key])}>
-                <span aria-hidden="true">{f.icon}</span>
-                <input id={f.id} style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1 }} type={f.type} placeholder={f.placeholder} value={f.val} autoComplete={f.autoComplete} onChange={e => f.set(e.target.value)} onFocus={() => focus(f.key)} onBlur={() => blur(f.key)} aria-required="true" />
-              </div>
-            </div>
-          ))}
-          {[
-            { id: "sg-pass", icon: "🔑", placeholder: "Senha (mín. 6 caracteres)", val: confirmPass === "" ? pass : pass, set: setPass, key: "spass", show: showPass, toggle: () => { setShowPass(v => !v); speak(showPass ? "Senha ocultada" : "Senha visível"); } },
-            { id: "sg-conf", icon: "🔒", placeholder: "Confirmar senha",            val: confirmPass,                       set: setConfirmPass, key: "sconf", show: showConfirm, toggle: () => { setShowConfirm(v => !v); } },
-          ].map(f => (
-            <div key={f.id} style={{ marginBottom: 10 }}>
-              <label htmlFor={f.id} style={{ position: "absolute", left: -9999 }}>{f.placeholder}</label>
-              <div style={inputRow(foci[f.key])}>
-                <span aria-hidden="true">{f.icon}</span>
-                <input id={f.id} style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1 }} type={f.show ? "text" : "password"} placeholder={f.placeholder} value={f.val} onChange={e => f.set(e.target.value)} onFocus={() => focus(f.key)} onBlur={() => blur(f.key)} aria-required="true" />
-                <button onClick={f.toggle} aria-label={f.show ? "Ocultar" : "Mostrar"} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: C.muted }}>{f.show ? "🙈" : "👁️"}</button>
-              </div>
-            </div>
-          ))}
-
-          {/* Password strength indicator */}
-          {pass.length > 0 && (
-            <div style={{ marginBottom: 12 }} aria-live="polite">
-              <div style={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                {[1,2,3,4].map(i => {
-                  const strength = pass.length < 4 ? 1 : pass.length < 7 ? 2 : /[A-Z]/.test(pass) && /\d/.test(pass) ? 4 : 3;
-                  const clr = ["#FF6B6B","#FF8C42","#FFD93D","#1AD9A4"][strength - 1];
-                  return <div key={i} style={{ flex: 1, height: 3, borderRadius: 4, background: i <= strength ? clr : "rgba(255,255,255,0.1)", transition: "all 0.3s" }} />;
-                })}
-              </div>
-              <span style={{ fontSize: `${0.62 * fontSize}rem`, color: C.muted }}>
-                Força: {pass.length < 4 ? "Fraca" : pass.length < 7 ? "Razoável" : /[A-Z]/.test(pass) && /\d/.test(pass) ? "Forte" : "Boa"}
-              </span>
-            </div>
-          )}
-
-          {/* Terms */}
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: `1px solid ${C.border}` }}>
-            <button role="checkbox" aria-checked={acceptTerms} aria-label="Aceitar termos de uso e política de privacidade"
-              onClick={() => { setAcceptTerms(v => !v); speak(acceptTerms ? "Termos desmarcados" : "Termos aceitos"); }}
-              style={{ width: largeTargets ? 26 : 20, height: largeTargets ? 26 : 20, borderRadius: 6, border: `2px solid ${acceptTerms ? C.teal : C.border}`, background: acceptTerms ? C.teal : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: "#070A12", transition: "all 0.2s" }}>
-              {acceptTerms ? "✓" : ""}
+      {/* Mode tabs */}
+      {!isRelock && (
+        <div role="tablist" style={{ display: "flex", background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: 4, marginBottom: 18 }}>
+          {[{ id: "login", label: "Sign in" }, { id: "signup", label: "Sign up" }].map(m => (
+            <button key={m.id} role="tab" aria-selected={mode === m.id}
+              onClick={() => { setMode(m.id); setError(""); setSuccess(""); }}
+              style={{ flex: 1, padding: `${largeTargets ? 12 : 9}px`, borderRadius: 11, border: "none", cursor: "pointer", fontFamily: "inherit", fontWeight: 700, fontSize: `${0.82 * fontSize}rem`, background: mode === m.id ? C.teal : "transparent", color: mode === m.id ? "#070A12" : C.muted, transition: "all 0.2s" }}>
+              {m.label}
             </button>
-            <span style={{ fontSize: `${0.68 * fontSize}rem`, color: C.muted, lineHeight: 1.5 }}>
-              Li e aceito os <span style={{ color: C.teal, cursor: "pointer" }}>Termos de Uso</span> e a <span style={{ color: C.teal, cursor: "pointer" }}>Política de Privacidade</span> do Facilities Travel.
-            </span>
-          </div>
-
-          {error && <div role="alert" style={{ background: `${C.danger}18`, border: `1px solid ${C.danger}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.danger, marginBottom: 12, lineHeight: 1.5 }}>{error}</div>}
-          {success && <div role="status" style={{ background: `${C.teal}18`, border: `1px solid ${C.teal}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.teal, marginBottom: 12 }}>{success}</div>}
-
-          <button onClick={handleSignup} disabled={loading} aria-busy={loading}
-            style={{ width: "100%", height: btnH, borderRadius: 15, border: "none", background: `linear-gradient(135deg, ${C.teal}, #0EB886)`, color: "#070A12", fontSize: `${0.85 * fontSize}rem`, fontWeight: 800, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4, opacity: loading ? 0.75 : 1, fontFamily: "inherit" }}>
-            {loading && <span style={{ width: 14, height: 14, border: "2px solid rgba(0,0,0,0.25)", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} aria-hidden="true" />}
-            {loading ? "Criando conta…" : "Criar minha conta"}
-          </button>
+          ))}
         </div>
       )}
 
-      {success && mode === "login" && <div role="status" style={{ background: `${C.teal}18`, border: `1px solid ${C.teal}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.teal, marginBottom: 12 }}>{success}</div>}
+      {/* SSL badge */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: `${C.teal}0C`, border: `1px solid ${C.teal}25`, borderRadius: 11, padding: "6px 12px", marginBottom: 18 }}>
+        <span aria-hidden="true">🔒</span>
+        <span style={{ fontSize: `${0.6 * fontSize}rem`, fontWeight: 700, color: C.teal }}>Secure connection · SSL 256-bit · WCAG 2.1</span>
+      </div>
 
-      {/* Divider */}
-      {divider}
-
-      {/* Social login buttons */}
-      <div role="group" aria-label="Entrar com conta social" style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 14 }}>
+      {/* ── SOCIAL BUTTONS — sempre visíveis no topo ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 6 }}>
         {SOCIAL_PROVIDERS.map(p => (
           <button key={p.id} onClick={() => handleSocial(p)} disabled={!!socialLoading}
             aria-label={p.label} aria-busy={socialLoading === p.id}
-            style={{ width: "100%", height: largeTargets ? 52 : 44, borderRadius: 14, border: `1.5px solid ${p.border}`, background: p.bg, color: p.color, fontSize: `${0.82 * fontSize}rem`, fontWeight: 600, cursor: socialLoading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, opacity: socialLoading && socialLoading !== p.id ? 0.45 : 1, transition: "opacity 0.2s, transform 0.15s", fontFamily: "inherit" }}
-            onMouseEnter={e => e.currentTarget.style.transform = "scale(1.015)"}
-            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+            style={{ width: "100%", height: largeTargets ? 52 : 46, borderRadius: 13, border: `1.5px solid ${p.border}`, background: p.bg, color: p.color, fontSize: `${0.82 * fontSize}rem`, fontWeight: 600, cursor: socialLoading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, opacity: socialLoading && socialLoading !== p.id ? 0.5 : 1, transition: "opacity 0.2s, transform 0.15s", fontFamily: "inherit", touchAction: "manipulation" }}
+            onMouseEnter={e => !socialLoading && (e.currentTarget.style.transform = "scale(1.015)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}>
             {socialLoading === p.id
-              ? <span style={{ width: 16, height: 16, border: `2px solid ${p.color}44`, borderTopColor: p.color, borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} aria-hidden="true" />
+              ? <span style={{ width: 16, height: 16, border: `2px solid ${p.color}55`, borderTopColor: p.color, borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} />
               : p.logo}
             {socialLoading === p.id ? "Conectando…" : p.label}
           </button>
         ))}
       </div>
 
-      {/* Biometric */}
-      <button onClick={handleBiometric} disabled={bioLoading}
-        aria-label="Entrar com Face ID ou Touch ID"
-        style={{ width: "100%", height: largeTargets ? 52 : 44, borderRadius: 14, border: `2px solid ${C.teal}45`, background: `${C.teal}0A`, color: C.teal, fontSize: `${0.82 * fontSize}rem`, fontWeight: 700, cursor: bioLoading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, fontFamily: "inherit", opacity: bioLoading ? 0.75 : 1, marginBottom: 18 }}>
-        {bioLoading ? <span style={{ width: 14, height: 14, border: `2px solid ${C.teal}40`, borderTopColor: C.teal, borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} aria-hidden="true" /> : <span aria-hidden="true" style={{ fontSize: 20 }}>🫆</span>}
-        {bioLoading ? "Verificando biometria…" : "Face ID / Touch ID / Biometria"}
-      </button>
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0" }}>
+        <div style={{ flex: 1, height: 1, background: C.border }} />
+        <span style={{ fontSize: `${0.65 * fontSize}rem`, color: C.muted }}>or use email</span>
+        <div style={{ flex: 1, height: 1, background: C.border }} />
+      </div>
 
-      <p style={{ textAlign: "center", fontSize: `${0.6 * fontSize}rem`, color: C.muted, lineHeight: 1.7 }}>
-        Criptografia de ponta a ponta · WCAG 2.1 AA<br />
-        Seus dados nunca são compartilhados ou vendidos.
+      {/* ── LOGIN FORM ── */}
+      {(mode === "login" || isRelock) && (
+        <div>
+          <div style={ir(foci.email)}>
+            <span aria-hidden="true">📧</span>
+            <input style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1, fontFamily: "inherit" }}
+              type="email" placeholder="E-mail" value={email} autoComplete="email"
+              onChange={e => setEmail(e.target.value)} onFocus={() => focus("email")} onBlur={() => blur("email")}
+              aria-label="E-mail" inputMode="email" />
+          </div>
+          <div style={ir(foci.pass)}>
+            <span aria-hidden="true">🔑</span>
+            <input style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1, fontFamily: "inherit" }}
+              type={showPass ? "text" : "password"} placeholder="Password"
+              value={pass} autoComplete="current-password"
+              onChange={e => setPass(e.target.value)} onFocus={() => focus("pass")} onBlur={() => blur("pass")}
+              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              aria-label="Senha" />
+            <button onClick={() => setShowPass(v => !v)} aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 15, color: C.muted, padding: 4 }}>
+              {showPass ? "🙈" : "👁️"}
+            </button>
+          </div>
+          {error && <div role="alert" style={{ background: `${C.danger}18`, border: `1px solid ${C.danger}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.72 * fontSize}rem`, color: C.danger, marginBottom: 12, lineHeight: 1.5 }}>{error}</div>}
+          <button onClick={handleLogin} disabled={loading}
+            style={{ width: "100%", height: btnH, borderRadius: 15, border: "none", background: `linear-gradient(135deg, ${C.teal}, #0EB886)`, color: "#070A12", fontSize: `${0.88 * fontSize}rem`, fontWeight: 800, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: loading ? 0.75 : 1, fontFamily: "inherit", touchAction: "manipulation", marginBottom: 10 }}>
+            {loading && <span style={{ width: 14, height: 14, border: "2px solid rgba(0,0,0,0.2)", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} />}
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+          <button onClick={() => { setSuccess("Link enviado para seu e-mail! Verifique a caixa de entrada."); }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: C.teal, fontSize: `${0.72 * fontSize}rem`, fontWeight: 600, display: "block", margin: "0 auto 6px", fontFamily: "inherit" }}>
+            Esqueci minha senha
+          </button>
+          {success && <div role="status" style={{ background: `${C.teal}18`, border: `1px solid ${C.teal}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.teal, marginTop: 8, textAlign: "center" }}>{success}</div>}
+        </div>
+      )}
+
+      {/* ── SIGNUP FORM ── */}
+      {mode === "signup" && !isRelock && (
+        <div>
+          {[
+            { icon: "👤", placeholder: "Nome completo *", type: "text",  val: name,  set: setName,  k: "name",   ac: "name" },
+            { icon: "📧", placeholder: "E-mail *",         type: "email", val: email, set: setEmail, k: "email2", ac: "email" },
+            { icon: "📱", placeholder: "Telefone (opcional)", type: "tel", val: phone, set: setPhone, k: "phone",  ac: "tel" },
+          ].map(f => (
+            <div key={f.k} style={ir(foci[f.k])}>
+              <span aria-hidden="true">{f.icon}</span>
+              <input style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1, fontFamily: "inherit" }}
+                type={f.type} placeholder={f.placeholder} value={f.val} autoComplete={f.ac}
+                onChange={e => f.set(e.target.value)} onFocus={() => focus(f.k)} onBlur={() => blur(f.k)} />
+            </div>
+          ))}
+          {[
+            { icon: "🔑", placeholder: "Senha (mín. 6 caracteres) *", val: pass, set: setPass, k: "sp", show: showPass, tog: () => setShowPass(v => !v), ac: "new-password" },
+            { icon: "🔒", placeholder: "Confirmar senha *", val: confirmPass, set: setConfirmPass, k: "sc", show: showConfirm, tog: () => setShowConfirm(v => !v), ac: "new-password" },
+          ].map(f => (
+            <div key={f.k} style={ir(foci[f.k])}>
+              <span aria-hidden="true">{f.icon}</span>
+              <input style={{ background: "none", border: "none", color: C.fg, fontSize: `${0.88 * fontSize}rem`, flex: 1, fontFamily: "inherit" }}
+                type={f.show ? "text" : "password"} placeholder={f.placeholder} value={f.val} autoComplete={f.ac}
+                onChange={e => f.set(e.target.value)} onFocus={() => focus(f.k)} onBlur={() => blur(f.k)} />
+              <button onClick={f.tog} aria-label={f.show ? "Ocultar" : "Mostrar"} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: C.muted, padding: 4 }}>{f.show ? "🙈" : "👁️"}</button>
+            </div>
+          ))}
+
+          {/* Força da senha */}
+          {pass.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 4, marginBottom: 3 }}>
+                {[1,2,3,4].map(i => {
+                  const s = pass.length < 4 ? 1 : pass.length < 7 ? 2 : /[A-Z]/.test(pass) && /\d/.test(pass) ? 4 : 3;
+                  const cl = ["#FF6B6B","#FF8C42","#FFD93D","#1AD9A4"][s-1];
+                  return <div key={i} style={{ flex: 1, height: 3, borderRadius: 4, background: i <= s ? cl : "rgba(255,255,255,0.1)" }} />;
+                })}
+              </div>
+              <span style={{ fontSize: `${0.62 * fontSize}rem`, color: C.muted }}>
+                Força: {pass.length < 4 ? "Fraca" : pass.length < 7 ? "Razoável" : /[A-Z]/.test(pass) && /\d/.test(pass) ? "Forte 💪" : "Boa"}
+              </span>
+            </div>
+          )}
+
+          {/* Termos */}
+          <button role="checkbox" aria-checked={acceptTerms} onClick={() => setAcceptTerms(v => !v)}
+            style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: `1px solid ${acceptTerms ? C.teal + "50" : C.border}`, width: "100%", cursor: "pointer", textAlign: "left", touchAction: "manipulation" }}>
+            <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${acceptTerms ? C.teal : C.border}`, background: acceptTerms ? C.teal : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: "#070A12", transition: "all 0.2s" }}>{acceptTerms ? "✓" : ""}</div>
+            <span style={{ fontSize: `${0.68 * fontSize}rem`, color: C.muted, lineHeight: 1.5 }}>
+              I agree to the <span style={{ color: C.teal }}>Terms of Service</span> and <span style={{ color: C.teal }}>Privacy Policy</span>
+            </span>
+          </button>
+
+          {error && <div role="alert" style={{ background: `${C.danger}18`, border: `1px solid ${C.danger}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.72 * fontSize}rem`, color: C.danger, marginBottom: 12, lineHeight: 1.5 }}>{error}</div>}
+          {success && <div role="status" style={{ background: `${C.teal}18`, border: `1px solid ${C.teal}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.72 * fontSize}rem`, color: C.teal, marginBottom: 12 }}>{success}</div>}
+
+          <button onClick={handleSignup} disabled={loading}
+            style={{ width: "100%", height: btnH, borderRadius: 15, border: "none", background: `linear-gradient(135deg, ${C.teal}, #0EB886)`, color: "#070A12", fontSize: `${0.88 * fontSize}rem`, fontWeight: 800, cursor: loading ? "wait" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: loading ? 0.75 : 1, fontFamily: "inherit", touchAction: "manipulation" }}>
+            {loading && <span style={{ width: 14, height: 14, border: "2px solid rgba(0,0,0,0.2)", borderTopColor: "#000", borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} />}
+            {loading ? "Creating account…" : "Create free account"}
+          </button>
+        </div>
+      )}
+
+      <p style={{ textAlign: "center", fontSize: `${0.58 * fontSize}rem`, color: C.muted, lineHeight: 1.7, marginTop: 20 }}>
+        End-to-end encrypted · Your data is never sold
       </p>
     </main>
   );
 }
 
-// ─── SCREEN: 2FA ─────────────────────────────────────────────────────────────
-function TwoFAScreen({ onVerified, onBack }) {
-  const { colors: C, fontSize, largeTargets, speak } = useA11y();
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [countdown, setCountdown] = useState(30);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [correctOtp] = useState(generateOTP());
-  const refs = useRef([]);
-
-  useEffect(() => { speak(`Código de verificação enviado para ${DEMO_USER.phone}. Insira os 6 dígitos.`); }, []);
-  useEffect(() => { if (countdown <= 0) return; const t = setTimeout(() => setCountdown(c => c - 1), 1000); return () => clearTimeout(t); }, [countdown]);
-
-  const handleDigit = (i, val) => {
-    const v = val.replace(/\D/, "").slice(-1);
-    const next = [...otp]; next[i] = v; setOtp(next);
-    if (v && i < 5) refs.current[i + 1]?.focus();
-    if (next.every(d => d)) setTimeout(() => verify(next.join("")), 150);
-  };
-  const handleKeyDown = (i, e) => { if (e.key === "Backspace" && !otp[i] && i > 0) refs.current[i - 1]?.focus(); };
-
-  const verify = (code) => {
-    setLoading(true);
-    setTimeout(() => {
-      if (code === correctOtp || code === "123456") { speak("Código verificado. Acesse seu PIN."); onVerified(); }
-      else { const msg = "Código inválido. Tente novamente."; setError(msg); speak(msg); setOtp(["", "", "", "", "", ""]); refs.current[0]?.focus(); setLoading(false); }
-    }, 900);
-  };
-
-  return (
-    <main role="main" aria-label="Verificação em dois fatores" style={{ ...authContainer(C), fontSize: `${fontSize}rem` }}>
-      <button onClick={onBack} aria-label="Voltar para o login" style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", marginBottom: 24, fontSize: `${0.82 * fontSize}rem`, display: "flex", alignItems: "center", gap: 6 }}>← Voltar</button>
-      <div style={{ textAlign: "center", marginBottom: 30 }}>
-        <div style={{ ...logoBox(C), background: "rgba(108,99,255,0.12)", borderColor: "rgba(108,99,255,0.3)" }} aria-hidden="true"><span style={{ fontSize: 24 }}>📱</span></div>
-        <h1 style={{ fontSize: `${1.4 * fontSize}rem`, fontWeight: 800, marginBottom: 6 }}>Verificação em 2 Etapas</h1>
-        <p style={{ fontSize: `${0.75 * fontSize}rem`, color: C.muted, lineHeight: 1.6 }}>
-          Código enviado para <strong style={{ color: C.teal }}>{DEMO_USER.phone}</strong>
-        </p>
-      </div>
-
-      <fieldset style={{ border: "none", padding: 0, marginBottom: 28 }} aria-label="Insira os 6 dígitos do código">
-        <legend style={{ position: "absolute", left: -9999 }}>Código de verificação de 6 dígitos</legend>
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          {otp.map((d, i) => (
-            <input key={i} ref={el => refs.current[i] = el} value={d} onChange={e => handleDigit(i, e.target.value)} onKeyDown={e => handleKeyDown(i, e)}
-              maxLength={1} inputMode="numeric" aria-label={`Dígito ${i + 1} do código`}
-              style={{ width: largeTargets ? 52 : 44, height: largeTargets ? 60 : 52, borderRadius: 13, textAlign: "center", fontSize: `${1.4 * fontSize}rem`, fontWeight: 800, background: d ? `${C.teal}18` : "rgba(255,255,255,0.05)", border: `2px solid ${d ? C.teal + "80" : C.border}`, color: C.fg, outline: "none", transition: "all 0.2s" }} />
-          ))}
-        </div>
-      </fieldset>
-
-      {error && <div role="alert" style={{ background: `${C.danger}18`, border: `1px solid ${C.danger}44`, borderRadius: 11, padding: "9px 13px", fontSize: `${0.7 * fontSize}rem`, color: C.danger, marginBottom: 14 }}>{error}</div>}
-      {loading && <div aria-live="polite" style={{ textAlign: "center", marginBottom: 12 }}><span style={{ width: 16, height: 16, border: `2px solid ${C.teal}30`, borderTopColor: C.teal, borderRadius: "50%", animation: "spin 0.7s linear infinite", display: "inline-block" }} aria-label="Verificando código" /></div>}
-
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        {countdown > 0
-          ? <p style={{ fontSize: `${0.75 * fontSize}rem`, color: C.muted }} aria-live="polite">Reenviar em <strong style={{ color: C.teal }}>{countdown}s</strong></p>
-          : <button onClick={() => { setCountdown(30); speak("Novo código enviado."); }} aria-label="Reenviar código por SMS" style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 13, color: C.muted, padding: "9px 18px", fontSize: `${0.7 * fontSize}rem`, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>📲 Reenviar código</button>}
-      </div>
-    </main>
-  );
-}
-
-// ─── SCREEN: PIN ──────────────────────────────────────────────────────────────
-function PinScreen({ onUnlock, onLogout, isRelock }) {
-  const { colors: C, fontSize, largeTargets, speak } = useA11y();
-  const [pin, setPin] = useState([]);
-  const [error, setError] = useState(false);
-  const [shake, setShake] = useState(false);
-  const digits = [1,2,3,4,5,6,7,8,9,null,0,"⌫"];
-  const keySize = largeTargets ? 72 : 56;
-
-  useEffect(() => { speak(isRelock ? "Sessão bloqueada. Insira seu PIN de 4 dígitos." : `Olá ${DEMO_USER.name}. Insira seu PIN de 4 dígitos.`); }, []);
-
-  const addDigit = (d) => {
-    if (d === "⌫") { setPin(p => { const n = p.slice(0,-1); speak(`${n.length} dígitos inseridos`); return n; }); return; }
-    if (d === null) return;
-    const next = [...pin, d];
-    setPin(next);
-    speak(`${next.length} dígitos`);
-    if (next.length === 4) {
-      setTimeout(() => {
-        if (next.join("") === DEMO_USER.pin) { speak("PIN correto. Bem-vindo ao Facilities Travel."); onUnlock(); }
-        else { speak("PIN incorreto. Tente novamente."); setShake(true); setError(true); setPin([]); setTimeout(() => { setShake(false); setError(false); }, 700); }
-      }, 180);
-    }
-  };
-
-  return (
-    <main role="main" aria-label={isRelock ? "Sessão bloqueada — insira o PIN" : "Tela de PIN"} style={{ ...authContainer(C), fontSize: `${fontSize}rem` }}>
-      <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <div style={logoBox(C)} aria-hidden="true"><span style={{ fontSize: 24 }}>🛡️</span></div>
-        <h1 style={{ fontSize: `${1.35 * fontSize}rem`, fontWeight: 800, marginBottom: 5 }}>{isRelock ? "Sessão bloqueada" : "PIN de segurança"}</h1>
-        <p style={{ fontSize: `${0.75 * fontSize}rem`, color: C.muted }}>{isRelock ? "Insira seu PIN para continuar" : `Olá de volta, ${DEMO_USER.name}!`}</p>
-      </div>
-
-      <div role="group" aria-label={`${pin.length} de 4 dígitos inseridos`}
-        style={{ display: "flex", gap: 14, justifyContent: "center", marginBottom: 32, animation: shake ? "shake 0.4s ease" : "none" }}>
-        {[0,1,2,3].map(i => (
-          <div key={i} aria-hidden="true" style={{ width: largeTargets ? 20 : 15, height: largeTargets ? 20 : 15, borderRadius: "50%", background: error ? C.danger : pin.length > i ? C.teal : "rgba(255,255,255,0.12)", border: `2px solid ${error ? C.danger : pin.length > i ? C.teal : "rgba(255,255,255,0.18)"}`, transition: "all 0.2s" }} />
-        ))}
-      </div>
-
-      <div role="group" aria-label="Teclado numérico" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: largeTargets ? 14 : 11, maxWidth: largeTargets ? 320 : 256, margin: "0 auto 26px" }}>
-        {digits.map((d, i) => (
-          <button key={i} onClick={() => addDigit(d)}
-            aria-label={d === "⌫" ? "Apagar último dígito" : d === null ? "" : `Dígito ${d}`}
-            disabled={d === null} tabIndex={d === null ? -1 : 0}
-            style={{ width: "100%", height: keySize, borderRadius: 16, border: `1px solid ${C.border}`, background: d === "⌫" ? `${C.danger}18` : "rgba(255,255,255,0.05)", color: d === "⌫" ? C.danger : d === null ? "transparent" : C.fg, fontSize: d === "⌫" ? 18 : `${1.4 * fontSize}rem`, fontWeight: 700, cursor: d === null ? "default" : "pointer", fontFamily: "inherit", pointerEvents: d === null ? "none" : "auto" }}>
-            {d}
-          </button>
-        ))}
-      </div>
-      <button onClick={onLogout} style={{ background: "none", border: `1px solid ${C.border}`, borderRadius: 13, color: C.muted, padding: "9px 18px", fontSize: `${0.7 * fontSize}rem`, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "block", margin: "0 auto" }}>
-        Trocar conta
-      </button>
-    </main>
-  );
-}
 
 // ─── AI Flight Panel ──────────────────────────────────────────────────────────
 function AIFlightPanel({ dest, onClose, dataHidden }) {
@@ -1482,7 +1358,13 @@ function SmartSearch({ searchQuery, setSearchQuery, setActiveTab, setAiPanel, sp
   useEffect(() => {
     const raw = searchQuery.trim();
     currentQuery.current = raw;
-    if (!raw) { setResults([]); setAiLoading(false); clearTimeout(aiTimer.current); return; }
+    if (!raw) {
+      setResults([]);
+      setAiLoading(false);
+      clearTimeout(aiTimer.current);
+      setShowDropdown(false);   // fecha dropdown ao limpar
+      return;
+    }
 
     // 1. Instant local scoring
     const seen = new Set();
@@ -1533,12 +1415,22 @@ function SmartSearch({ searchQuery, setSearchQuery, setActiveTab, setAiPanel, sp
   }, [searchQuery]);
 
   const handleSelect = (dest) => {
-    setSearchQuery(dest.name);
+    // Limpa busca ANTES de abrir o painel — evita re-trigger do useEffect
     setResults([]);
     setShowDropdown(false);
+    setAiLoading(false);
+    setSearchQuery("");          // <-- limpa o campo após seleção
     speak("Destino: " + dest.name + ", " + dest.country);
     const known = destinations.find(d => d.iata === dest.iata || norm(d.name) === norm(dest.name));
-    if (known) setTimeout(() => setAiPanel(known), 150);
+    // Se destino conhecido → abre painel IA; senão → navega para busca avançada
+    setTimeout(() => {
+      if (known) {
+        setAiPanel(known);
+      } else {
+        // Destino não mapeado ainda — abre busca avançada com destino preenchido
+        setActiveTab("search");
+      }
+    }, 100);
   };
 
   const saveSearch = (query, tag = "") => {
@@ -1570,7 +1462,7 @@ function SmartSearch({ searchQuery, setSearchQuery, setActiveTab, setAiPanel, sp
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }}
           onFocus={() => { setFocused(true); setShowDropdown(true); }}
-          onBlur={() => { setFocused(false); setTimeout(() => setShowDropdown(false), 300); }}
+          onBlur={() => { setFocused(false); setTimeout(() => setShowDropdown(false), 400); }}
           onKeyDown={e => { if (e.key === "Escape") { setShowDropdown(false); setSearchQuery(""); inputRef.current?.blur(); } }}
           placeholder="🌍 Destino, cidade, praia, país…"
           aria-label="Buscar destinos nacionais e internacionais"
@@ -1605,7 +1497,7 @@ function SmartSearch({ searchQuery, setSearchQuery, setActiveTab, setAiPanel, sp
                   { label: "🎡 Parques", query: "Orlando" },
                   { label: "🍷 Gourmet", query: "Lima" },
                 ].map((p, i) => (
-                  <button key={i} onClick={(e) => { e.preventDefault(); setSearchQuery(p.query); setShowDropdown(true); speak("Buscando " + p.label); inputRef.current?.focus(); }}
+                  <button key={i} onClick={(e) => { e.preventDefault(); setResults([]); setSearchQuery(p.query); setShowDropdown(true); speak("Buscando " + p.label); inputRef.current?.focus(); }}
                     style={{ padding: "5px 12px", borderRadius: 20, border: `1px solid ${C.border}`, background: "rgba(255,255,255,0.05)", color: C.muted, fontSize: `${0.68 * fs2}rem`, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${C.teal}22`; e.currentTarget.style.color = C.teal; e.currentTarget.style.borderColor = `${C.teal}55`; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border; }}>
@@ -1731,7 +1623,7 @@ function AppInner() {
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
-    if (screen === "app") idleTimer.current = setTimeout(() => setScreen("locked"), SESSION_TIMEOUT_MS);
+    if (screen === "app") idleTimer.current = setTimeout(() => setScreen("locked"), SESSION_TIMEOUT_MS * 12); // 1 hora
   }, [screen]);
 
   useEffect(() => {
@@ -1747,10 +1639,18 @@ function AppInner() {
     return () => clearTimeout(t);
   }, [activeTab]);
 
-  const handleTabChange = (id, label) => { setActiveTab(id); speak(`Aba ${label} selecionada`); mainRef.current?.focus(); };
+  const handleTabChange = (id, label) => {
+    setActiveTab(id);
+    // Limpar busca ao trocar de aba para não bloquear conteúdo
+    if (id !== "search") setSearchQuery("");
+    speak(`Aba ${label} selecionada`);
+    mainRef.current?.focus();
+  };
 
   const filtered = destinations.filter(d => {
-    const ms = d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.country.toLowerCase().includes(searchQuery.toLowerCase());
+    // Só filtra por texto se tiver algo digitado e o dropdown estiver fechado
+    const q = searchQuery.trim().toLowerCase();
+    const ms = !q || d.name.toLowerCase().includes(q) || d.country.toLowerCase().includes(q);
     const mt = filterTag === "Todos" || d.tag === filterTag;
     const ma = !a11yFilter || d.a11y.wheelchair;
     return ms && mt && ma;
@@ -1758,10 +1658,8 @@ function AppInner() {
 
   const toggleSave = (id, name) => { setSavedDests(p => { const n = p.includes(id) ? p.filter(x => x !== id) : [...p, id]; speak(p.includes(id) ? `${name} removido dos salvos` : `${name} salvo`); return n; }); };
 
-  if (screen === "login") return <LoginScreen onNext={s => setScreen(s)} />;
-  if (screen === "2fa") return <TwoFAScreen onVerified={() => setScreen("pin")} onBack={() => setScreen("login")} />;
-  if (screen === "pin") return <PinScreen onUnlock={() => setScreen("app")} onLogout={() => setScreen("login")} isRelock={false} />;
-  if (screen === "locked") return <PinScreen onUnlock={() => setScreen("app")} onLogout={() => setScreen("login")} isRelock={true} />;
+  if (screen === "login") return <><GS /><LoginScreen onEnter={() => setScreen("app")} /></>;
+  if (screen === "locked") return <><GS /><LoginScreen onEnter={() => setScreen("app")} isRelock={true} /></>;
 
   const btnH = largeTargets ? 52 : 40;
 
@@ -1785,9 +1683,9 @@ function AppInner() {
               <span style={{ fontSize: `${0.62 * fontSize}rem`, letterSpacing: 2, textTransform: "uppercase", color: C.teal, fontWeight: 700 }}>seguro · ao vivo</span>
             </div>
             <h1 style={{ fontSize: `${1.6 * fontSize}rem`, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>
-              Facilities<span style={{ color: C.teal }}>Travel</span>
+              Wander<span style={{ color: C.teal }}>.</span>
             </h1>
-            <p style={{ fontSize: `${0.75 * fontSize}rem`, color: C.muted, marginTop: 1 }}>Olá, {DEMO_USER.name} 👋</p>
+            <p style={{ fontSize: `${0.75 * fontSize}rem`, color: C.muted, marginTop: 1 }}>Hey, {DEMO_USER.name} 👋</p>
           </div>
           <div style={{ display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
             <button onClick={() => { setDataHidden(v => !v); speak(dataHidden ? "Valores visíveis" : "Valores ocultados"); }} aria-label={dataHidden ? "Mostrar valores" : "Ocultar valores financeiros"} aria-pressed={dataHidden}
@@ -1798,7 +1696,7 @@ function AppInner() {
               style={{ ...chipBtn(C, "rgba(78,195,255,0.1)", "rgba(78,195,255,0.28)"), minWidth: largeTargets ? 44 : 34, minHeight: largeTargets ? 44 : 34 }}>
               ♿
             </button>
-            <button onClick={() => { setSecPanel(true); speak("Central de segurança aberta"); }} aria-label="Abrir central de segurança" aria-haspopup="dialog"
+            <button onClick={() => { setSecPanel(true); speak("Central de segurança aberta"); }} aria-label="Open Security Center" aria-haspopup="dialog"
               style={{ ...chipBtn(C, `${C.teal}18`, `${C.teal}35`), minWidth: largeTargets ? 44 : 34, minHeight: largeTargets ? 44 : 34 }}>
               🛡️
             </button>
@@ -1812,7 +1710,7 @@ function AppInner() {
         <div style={{ padding: "0 20px 12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, background: `${C.teal}08`, border: `1px solid ${C.teal}20`, borderRadius: 11, padding: "6px 12px" }} role="note" aria-label="Status de segurança">
             <span aria-hidden="true">🔒</span>
-            <span style={{ fontSize: `${0.6 * fontSize}rem`, fontWeight: 700, color: C.teal }}>SSL · 2FA · Biometria · WCAG 2.1 AA</span>
+            <span style={{ fontSize: `${0.6 * fontSize}rem`, fontWeight: 700, color: C.teal }}>SSL · 2FA · Biometrics · WCAG 2.1</span>
             <span style={{ fontSize: `${0.6 * fontSize}rem`, color: C.muted, marginLeft: "auto" }}>{maskEmail(DEMO_USER.email)}</span>
           </div>
         </div>
@@ -1843,7 +1741,7 @@ function AppInner() {
 
         {/* Nav */}
         <nav role="navigation" aria-label="Navegação principal" style={{ display: "flex", padding: "0 20px", gap: 5, marginBottom: 18 }}>
-          {[{ id: "search", label: "Buscar", icon: "🔍" }, { id: "discover", label: "Descobrir", icon: "🌍" }, { id: "deals", label: "Ofertas", icon: "⚡" }, { id: "tips", label: "Dicas", icon: "💡" }, { id: "saved", label: "Salvos", icon: "❤️" }].map(t => (
+          {[{ id: "search", label: "Search", icon: "🔍" }, { id: "discover", label: "Explore", icon: "🌍" }, { id: "deals", label: "Deals", icon: "⚡" }, { id: "tips", label: "Tips", icon: "💡" }, { id: "saved", label: "Saved", icon: "❤️" }].map(t => (
             <button key={t.id} onClick={() => handleTabChange(t.id, t.label)}
               role="tab" aria-selected={activeTab === t.id} aria-controls={`panel-${t.id}`}
               style={{ flex: 1, padding: "7px 2px", borderRadius: 11, fontSize: `${0.6 * fontSize}rem`, fontFamily: "inherit", border: `2px solid ${activeTab === t.id ? C.teal : "transparent"}`, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, transition: "all 0.2s", background: activeTab === t.id ? C.teal : C.surface, color: activeTab === t.id ? "#070A12" : C.muted, fontWeight: activeTab === t.id ? 700 : 500, minHeight: largeTargets ? 56 : 44 }}>
@@ -1860,8 +1758,8 @@ function AppInner() {
           {activeTab === "search" && (
             <div>
               <div style={{ padding: "0 20px 6px" }}>
-                <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 2 }}>🔍 Busca Avançada</h2>
-                <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 16 }}>Voos, hotéis e pacotes — tudo em um lugar</p>
+                <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 2 }}>🔍 Smart Search</h2>
+                <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 16 }}>Flights, hotels & packages — all in one place</p>
               </div>
               <FullSearchPanel C={C} fontSize={fontSize} largeTargets={largeTargets} speak={speak} setAiPanel={setAiPanel} dataHidden={dataHidden} />
             </div>
@@ -1943,7 +1841,7 @@ function AppInner() {
           {/* ── PcD INFO TAB ── */}
           {activeTab === "a11yinfo" && (
             <div style={{ padding: "0 20px" }}>
-              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>♿ Viagem para Todos</h2>
+              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>♿ Accessible Travel</h2>
               <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 20 }}>Recursos, dicas e destinos acessíveis</p>
 
               {/* Compliance badges */}
@@ -2003,7 +1901,7 @@ function AppInner() {
           {/* ── DEALS ── */}
           {activeTab === "deals" && (
             <div style={{ padding: "0 20px" }}>
-              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>⚡ Ofertas Relâmpago</h2>
+              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>⚡ Flash Deals</h2>
               <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 18 }}>Monitorado em tempo real · IA ativa</p>
               <div style={{ background: `${C.danger}0C`, border: `1px solid ${C.danger}35`, borderRadius: 16, padding: 15, marginBottom: 16 }} role="alert" aria-live="polite">
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}><span aria-hidden="true" style={{ fontSize: 17 }}>🔥</span><span style={{ fontWeight: 700, color: C.danger, fontSize: `${0.82 * fontSize}rem` }}>Alerta: São Paulo → Lisboa</span></div>
@@ -2031,7 +1929,7 @@ function AppInner() {
           {/* ── TIPS ── */}
           {activeTab === "tips" && (
             <div style={{ padding: "0 20px" }}>
-              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>💡 Viagem Inteligente</h2>
+              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>💡 Travel Tips</h2>
               <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 18 }}>Viaje bem gastando menos</p>
               <ul style={{ display: "flex", flexDirection: "column", gap: 11, listStyle: "none", marginBottom: 20 }}>
                 {[
@@ -2053,7 +1951,7 @@ function AppInner() {
           {/* ── SAVED ── */}
           {activeTab === "saved" && (
             <div style={{ padding: "0 20px" }}>
-              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>❤️ Salvos</h2>
+              <h2 style={{ fontSize: `${1.25 * fontSize}rem`, fontWeight: 800, marginBottom: 3 }}>❤️ Saved</h2>
               <p style={{ fontSize: `${0.7 * fontSize}rem`, color: C.muted, marginBottom: 18 }}>{savedDests.length} destino{savedDests.length !== 1 ? "s" : ""} na lista</p>
 
               {/* ── Saved Searches ── */}
@@ -2142,7 +2040,7 @@ function AppInner() {
 
       {/* Bottom Nav */}
       <nav role="navigation" aria-label="Navegação por abas" style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: highContrast ? "#000000" : "rgba(7,10,18,0.92)", backdropFilter: "blur(20px)", borderTop: `1px solid ${C.border}`, padding: `10px 20px ${largeTargets ? 32 : 25}px`, display: "flex", justifyContent: "space-around", zIndex: 100 }}>
-        {[{ id: "discover", icon: "🌍", label: "Explorar" }, { id: "deals", icon: "⚡", label: "Ofertas" }, { id: "tips", icon: "💡", label: "Dicas" }, { id: "a11yinfo", icon: "♿", label: "PcD" }, { id: "saved", icon: "❤️", label: "Salvos" }].map(t => (
+        {[{ id: "discover", icon: "🌍", label: "Explore" }, { id: "deals", icon: "⚡", label: "Deals" }, { id: "tips", icon: "💡", label: "Tips" }, { id: "a11yinfo", icon: "♿", label: "Access" }, { id: "saved", icon: "❤️", label: "Saved" }].map(t => (
           <button key={t.id} onClick={() => handleTabChange(t.id, t.label)} role="tab" aria-selected={activeTab === t.id} aria-controls={`panel-${t.id}`}
             style={{ background: "none", border: activeTab === t.id ? `2px solid ${C.teal}` : "2px solid transparent", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: largeTargets ? "8px 12px" : "4px 8px", borderRadius: 12, cursor: "pointer", color: activeTab === t.id ? C.teal : C.muted, transition: "color 0.2s", minWidth: largeTargets ? 52 : 40, minHeight: largeTargets ? 52 : 40 }}>
             <span style={{ fontSize: largeTargets ? 22 : 19 }} aria-hidden="true">{t.icon}</span>
@@ -2153,13 +2051,13 @@ function AppInner() {
 
       {/* Modals */}
       {selectedDest && (
-        <div onClick={() => setSelectedDest(null)} role="dialog" aria-modal="true" aria-label={`Detalhes de ${selectedDest.name}`}
+        <div onClick={() => { setSelectedDest(null); setSearchQuery(""); }} role="dialog" aria-modal="true" aria-label={`Detalhes de ${selectedDest.name}`}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(5px)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: highContrast ? "#0A0A0A" : "#0C1018", borderRadius: "24px 24px 0 0", border: `1px solid ${C.border}`, width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ position: "relative" }}>
               <img src={selectedDest.img} style={{ width: "100%", height: 200, objectFit: "cover" }} alt={`Vista de ${selectedDest.name}`} />
               <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0C1018 0%, transparent 55%)" }} />
-              <button onClick={() => setSelectedDest(null)} aria-label={`Fechar detalhes de ${selectedDest.name}`}
+              <button onClick={() => { setSelectedDest(null); setSearchQuery(""); }} aria-label={`Fechar detalhes de ${selectedDest.name}`}
                 style={{ position: "absolute", top: 13, right: 13, background: "rgba(7,10,18,0.72)", border: "none", color: C.fg, width: largeTargets ? 44 : 32, height: largeTargets ? 44 : 32, borderRadius: "50%", fontSize: 15, cursor: "pointer" }}>✕</button>
               <div style={{ position: "absolute", bottom: 0, left: 0, padding: "13px 17px" }}>
                 <h2 style={{ fontSize: `${1.5 * fontSize}rem`, fontWeight: 800, color: C.fg }}>{selectedDest.emoji} {selectedDest.name}</h2>
@@ -2182,7 +2080,7 @@ function AppInner() {
       )}
 
       {aiPanel && (
-        <div onClick={() => setAiPanel(null)} role="dialog" aria-modal="true" aria-label={`Busca de voos para ${aiPanel.name}`}
+        <div onClick={() => { setAiPanel(null); setSearchQuery(""); }} role="dialog" aria-modal="true" aria-label={`Busca de voos para ${aiPanel.name}`}
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", backdropFilter: "blur(5px)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: highContrast ? "#0A0A0A" : "#0C1018", borderRadius: "24px 24px 0 0", border: `1px solid ${C.border}`, width: "100%", maxHeight: "92vh", overflowY: "auto" }}>
             <AIFlightPanel dest={aiPanel} onClose={() => setAiPanel(null)} dataHidden={dataHidden} />
@@ -2218,7 +2116,7 @@ function AppInner() {
                   <div aria-label={ok ? "Ativo" : "Inativo"} style={{ fontSize: `${0.6 * fontSize}rem`, fontWeight: 700, padding: "2px 9px", borderRadius: 9, background: ok ? `${C.teal}22` : "rgba(255,255,255,0.04)", color: ok ? C.teal : C.muted }}>{ok ? "✓" : "—"}</div>
                 </div>
               ))}
-              <button onClick={() => { setSecPanel(false); setScreen("login"); speak("Saindo da conta com segurança."); }}
+              <button onClick={() => { setSecPanel(false); setScreen("login"); speak("Saindo da conta."); }}
                 aria-label="Sair da conta com segurança"
                 style={{ background: "none", border: `1px solid ${C.danger}40`, borderRadius: 13, color: C.danger, padding: "11px", fontSize: `${0.75 * fontSize}rem`, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", width: "100%", marginTop: 16 }}>
                 🚪 Sair da conta com segurança
@@ -2231,7 +2129,7 @@ function AppInner() {
   );
 }
 
-export default function FacilitiesTravel() {
+export default function Wander() {
   return (
     <A11yProvider>
       <AppInner />
@@ -2268,8 +2166,3 @@ function GS() {
     `}</style>
   );
 }
-
-
-// Entry point alias
-const App = FacilitiesTravel;
-export { App };

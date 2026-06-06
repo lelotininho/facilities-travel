@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Prompt is obrigatório" });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
+  const apiKey =
+    process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: "Anthropic API key não configurada" });
   }
@@ -30,7 +31,9 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || "Erro ao acessar a API Claude" });
+      return res
+        .status(response.status)
+        .json({ error: data.error?.message || "Erro ao acessar a API Claude" });
     }
 
     const text = Array.isArray(data.content)
@@ -39,6 +42,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ text });
   } catch (error) {
-    return res.status(500).json({ error: error?.message || "Erro interno no servidor" });
+    return res
+      .status(500)
+      .json({ error: error?.message || "Erro interno no servidor" });
   }
 }
