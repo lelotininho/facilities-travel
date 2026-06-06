@@ -94,6 +94,37 @@ npm run build
 
 ---
 
+## 📦 Distribuição — Baixar e usar
+
+Quer disponibilizar o app pronto para outras pessoas baixarem e usarem localmente? Criei uma release contendo o build (`dist`) empacotado: você pode baixar o ZIP pré-compilado em
+
+- Releases: https://github.com/lelotininho/facilities-travel/releases
+
+Instruções rápidas após baixar o ZIP:
+
+```bash
+# Descompacte o arquivo baixado (ex: facilities-travel-v1.0.0-dist.zip)
+unzip facilities-travel-v1.0.0-dist.zip
+
+# Servir os arquivos estáticos localmente (recomendado: serve)
+npx serve dist
+
+# Ou abra dist/index.html em um navegador
+```
+
+Para executar a partir do código-fonte (clonar + build):
+
+```bash
+git clone https://github.com/lelotininho/facilities-travel.git
+cd facilities-travel
+npm install
+npm run build
+npx serve dist
+```
+
+Observação: o repositório será tornado público para facilitar o download das releases.
+
+
 ## 🔐 Segurança
 
 - O repositório é **privado** — ninguém vê seu código
